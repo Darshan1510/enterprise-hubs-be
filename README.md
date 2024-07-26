@@ -61,6 +61,13 @@ The API will be available at `http://localhost:8000`.
     - `company_id`: The ID of the company whose locations to retrieve.
   - **Response**: A list of locations for the company.
 
+- **GET** `/api/companies/{company_id}/revenues`
+  - **Description**: Get all revenues for a specific company ID.
+  - **Path Parameters**:
+    - `company_id`: The ID of the company whose revenues to retrieve.
+  - **Response**: A list of revenues for the company.
+
+
 ## Docker
 
 ### Build and Run with Docker

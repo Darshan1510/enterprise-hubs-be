@@ -40,6 +40,7 @@ app.add_middleware(
 try:
     companies_df = pd.read_csv('companies.csv')
     locations_df = pd.read_csv('locations.csv')
+    revenue_df = pd.read_csv('location_revenue.csv')
     logger.info("CSV files loaded successfully.")
 except Exception as e:
     logger.error(f"Error loading CSV files: {e}")
@@ -47,7 +48,7 @@ except Exception as e:
 
 class Company(BaseModel):
     """
-    Pydantic model representing a company.
+    Model representing a company.
     """
     company_id: int
     name: str
@@ -57,7 +58,7 @@ class Company(BaseModel):
 
 class Location(BaseModel):
     """
-    Pydantic model representing a location.
+    Model representing a location.
     """
     location_id: int
     company_id: int
@@ -65,6 +66,16 @@ class Location(BaseModel):
     address: str
     latitude: float
     longitude: float
+
+class Revenue(BaseModel):
+    """
+    Model representing a revenue for each location.
+    """
+    location_id: int
+    company_id: int
+    location_name: str
+    year: int
+    revenue: float
 
 @app.get('/api/companies', response_model=List[Company], tags=["Companies"])
 async def get_companies(
@@ -123,6 +134,41 @@ async def get_locations(company_id: int):
     else:
         logger.warning(f"No locations found for company ID {company_id}.")
         raise HTTPException(status_code=404, detail='Locations not found')
+
+@app.get('/api/companies/{company_id}/revenues', response_model=List[Revenue], tags=["Revenue"])
+async def get_revenue_by_company(company_id: int):
+    """
+    Retrieve revenue data for a specific company ID.
+
+    - **company_id**: The ID of the company whose revenue data to retrieve.
+    """
+    revenue = revenue_df[revenue_df['company_id'] == (company_id)].to_dict(orient='records')
+    if revenue:
+        return [Revenue(**r) for r in revenue]
+    else:
+        logger.warning(f"No revenue data found for company ID {company_id}.")
+        raise HTTPException(status_code=404, detail='Revenue data not found')
+
+@app.get('/api/companies/locations', response_model=List[Location], tags=["Locations"])
+async def get_all_locations():
+    """
+    Retrieve all locations.
+
+    """
+    locations = locations_df.to_dict(orient='records')
+    return [Location(**location) for location in locations]
+
+
+@app.get('/api/companies/revenues', response_model=List[Revenue], tags=["Revenue"])
+async def get_revenue():
+    """
+    Retrieve all revenue data.
+
+    """
+    revenue = revenue_df.to_dict(orient='records')
+    return [Revenue(**r) for r in revenue]
+
+
 
 @app.get('/api/healthcheck', tags=["Health Check"])
 async def healthcheck():
